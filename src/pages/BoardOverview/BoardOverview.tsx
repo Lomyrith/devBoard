@@ -3,29 +3,22 @@ import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { type UUID, type Board } from "@/components/types/boardTypes"
+import { useBoardOverview } from "@/components/contexts/BoardOverviewContext"
 
-type BoardOverviewProps = {
-  boardList: Board[]
-  onSelectBoard: (boardId: Board) => void
-  onDeleteBoard: (boardId: UUID) => void
-}
+export default function BoardOverview() {
+  const { boardList, addBoard, deleteBoard } = useBoardOverview()
 
-export default function BoardOverview({
-  boardList,
-  onSelectBoard,
-  onDeleteBoard,
-}: BoardOverviewProps) {
   const navigate = useNavigate()
 
   function handleClickOnBoard(board: Board) {
     console.log(board)
     navigate(`/detail/${board.id}`)
-    onSelectBoard(board)
+    // onSelectBoard(board)
   }
 
-  function handleDeleteBoard(boardId: UUID) {
-    console.log(boardId)
-    onDeleteBoard(boardId)
+  function handleAddBoard() {
+    //Todo Overlay für Title
+    addBoard("AAA Neues Board")
   }
 
   return (
@@ -34,13 +27,19 @@ export default function BoardOverview({
       <div className="flex flex-row justify-between">
         <h1 className="text-2xl font-bold">Meine Boards</h1>
         <div>
-          <Button className="cursor-pointer bg-blue-950">Erstelle Board</Button>
+          <Button
+            onClick={handleAddBoard}
+            className="cursor-pointer bg-blue-950"
+          >
+            Neues Board
+          </Button>
         </div>
       </div>
       <div className="grid h-full w-full grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3">
-        {boardList.map((board) =>
-          getBoardCard(board, handleClickOnBoard, handleDeleteBoard)
-        )}
+        {boardList
+          .slice()
+          .sort((a, b) => a.title.localeCompare(b.title))
+          .map((board) => getBoardCard(board, handleClickOnBoard, deleteBoard))}
       </div>
     </div>
   )
