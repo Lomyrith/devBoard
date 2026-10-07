@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { type UUID, type Board } from "@/components/types/boardTypes"
 import { useBoardOverview } from "@/components/contexts/BoardOverviewContext"
+import { CreateBoardDialog } from "@/components/dialogs/AddDialogOverlay"
 
 export default function BoardOverview() {
   const { boardList, addBoard, deleteBoard } = useBoardOverview()
@@ -16,23 +16,19 @@ export default function BoardOverview() {
     // onSelectBoard(board)
   }
 
-  function handleAddBoard() {
-    //Todo Overlay für Title
-    addBoard("AAA Neues Board")
-  }
-
   return (
     <div className="flex min-h-screen flex-col p-4">
       {/* Headline */}
       <div className="flex flex-row justify-between">
         <h1 className="text-2xl font-bold">Meine Boards</h1>
         <div>
-          <Button
+          <CreateBoardDialog onCreateBoard={addBoard} />
+          {/* <Button
             onClick={handleAddBoard}
             className="cursor-pointer bg-blue-950"
           >
             Neues Board
-          </Button>
+          </Button> */}
         </div>
       </div>
       <div className="grid h-full w-full grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3">

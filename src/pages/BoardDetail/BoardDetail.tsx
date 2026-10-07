@@ -1,7 +1,7 @@
 import { useBoardOverview } from "@/components/contexts/BoardOverviewContext"
 import { type BoardColumn, type UUID } from "@/components/types/boardTypes"
 import { Label } from "@/components/ui/label"
-import { Input } from "@base-ui/react"
+import { Input } from "@/components/ui/input"
 import { ArrowLeft, Edit, Check, X, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
