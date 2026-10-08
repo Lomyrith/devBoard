@@ -10,11 +10,17 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-interface CreateBoardDialogProps {
-  onCreateBoard: (title: string) => void
+interface CreateDialogProps {
+  onCreate: (title: string) => void
+  nameOfCreatabelElement?: string
+  className?: string
 }
 
-export function CreateBoardDialog({ onCreateBoard }: CreateBoardDialogProps) {
+export function CreateWithNameDialog({
+  onCreate: onCreate,
+  nameOfCreatabelElement: nameOfCreatabelElement,
+  className: className,
+}: CreateDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false) // 👈 Guard State
@@ -25,7 +31,7 @@ export function CreateBoardDialog({ onCreateBoard }: CreateBoardDialogProps) {
 
     setIsSubmitting(true)
 
-    onCreateBoard(title.trim())
+    onCreate(title.trim())
 
     setTitle("")
     setIsOpen(false)
@@ -34,17 +40,23 @@ export function CreateBoardDialog({ onCreateBoard }: CreateBoardDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {/* Der Button, der das Overlay öffnet */}
-      <DialogTrigger render={<Button>Neues Board</Button>} />
+      <DialogTrigger
+        render={
+          <Button className={className}>
+            Erstelle {nameOfCreatabelElement}
+          </Button>
+        }
+      />
 
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Neues Board erstellen</DialogTitle>
+            <DialogTitle>{nameOfCreatabelElement} erstellen</DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
             <Input
-              placeholder="Name des neuen Boards eingeben..."
+              placeholder={`${nameOfCreatabelElement}-Name eingeben...`}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus

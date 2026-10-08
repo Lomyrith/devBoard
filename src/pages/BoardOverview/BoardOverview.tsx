@@ -3,7 +3,7 @@ import { Trash2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { type UUID, type Board } from "@/components/types/boardTypes"
 import { useBoardOverview } from "@/components/contexts/BoardOverviewContext"
-import { CreateBoardDialog } from "@/components/dialogs/AddDialogOverlay"
+import { CreateWithNameDialog } from "@/components/dialogs/CreateWithNameDialog"
 
 export default function BoardOverview() {
   const { boardList, addBoard, deleteBoard } = useBoardOverview()
@@ -22,7 +22,10 @@ export default function BoardOverview() {
       <div className="flex flex-row justify-between">
         <h1 className="text-2xl font-bold">Meine Boards</h1>
         <div>
-          <CreateBoardDialog onCreateBoard={addBoard} />
+          <CreateWithNameDialog
+            onCreate={addBoard}
+            nameOfCreatabelElement="Board"
+          />
           {/* <Button
             onClick={handleAddBoard}
             className="cursor-pointer bg-blue-950"
@@ -48,6 +51,7 @@ function getBoardCard(
 ) {
   return (
     <div
+      key={board.id}
       className="border-black-1 flex max-w-80 cursor-pointer flex-row justify-between gap-3 rounded-r-2xl border border-black p-5 hover:bg-blue-50"
       onClick={() => handleClickOnBoard(board)}
     >

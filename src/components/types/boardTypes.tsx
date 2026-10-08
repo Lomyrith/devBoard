@@ -14,8 +14,11 @@ export type BoardColumn = {
 
 export type BoardThread = {
   id: UUID
+  columnId: UUID
   title: string
   description: string
-  assigendTo: string
+  assignedTo: string
   deadline: Date
 }
+
+export type ThreadFormData = Omit<BoardThread, "id" | "columnId">

@@ -1,14 +1,22 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react"
 import { useParams } from "react-router-dom" // Oder dein genutzter Router
-import { type Board, type UUID, type BoardThread } from "../types/boardTypes"
+import {
+  type Board,
+  type UUID,
+  type BoardThread,
+  type ThreadFormData,
+} from "../types/boardTypes"
 import { useBoardOverview } from "./BoardOverviewContext"
 
 type DetailsAction =
+  | { type: "ADD_COLUMN"; payload: { title: string } }
   | { type: "SET_BOARD"; payload: Board | null }
   | { type: "DELETE_COLUMN"; payload: { columnId: UUID } }
-  | { type: "ADD_THREAD"; payload: { columnId: UUID; newThread: BoardThread } }
+  | {
+      type: "ADD_THREAD"
+      payload: { columnId: UUID; newThread: ThreadFormData }
+    }
   | { type: "MOVE_THREAD"; payload: { threadId: UUID; targetColumnId: UUID } }
-  | { type: "RENAME_ACTIVE_BOARD"; payload: { newTitle: string } }
 
 function detailsReducer(
   state: Board | null,
@@ -20,6 +28,18 @@ function detailsReducer(
     case "SET_BOARD":
       return action.payload
 
+    case "ADD_COLUMN":
+      return {
+        ...state!,
+        columns: [
+          ...(state!.columns ?? []),
+          {
+            id: crypto.randomUUID() as UUID,
+            title: action.payload.title,
+            threads: [],
+          },
+        ],
+      }
     case "DELETE_COLUMN":
       return {
         ...state!,
@@ -28,7 +48,13 @@ function detailsReducer(
           null,
       }
 
-    case "ADD_THREAD":
+    case "ADD_THREAD": {
+      const newBoardThread: BoardThread = {
+        ...action.payload.newThread,
+        id: crypto.randomUUID() as UUID,
+        columnId: action.payload.columnId,
+      }
+
       return {
         ...state!,
         columns:
@@ -36,12 +62,13 @@ function detailsReducer(
             if (col.id === action.payload.columnId) {
               return {
                 ...col,
-                threads: [...(col.threads ?? []), action.payload.newThread],
+                threads: [...(col.threads ?? []), newBoardThread],
               }
             }
             return col
           }) ?? null,
       }
+    }
 
     case "MOVE_THREAD": {
       const { threadId, targetColumnId } = action.payload
@@ -77,12 +104,6 @@ function detailsReducer(
       }
     }
 
-    case "RENAME_ACTIVE_BOARD":
-      return {
-        ...state!,
-        title: action.payload.newTitle,
-      }
-
     default:
       return state
   }
@@ -90,10 +111,10 @@ function detailsReducer(
 
 interface BoardDetailsContextType {
   activeBoard: Board | null
+  addNewColumn: (title: string) => void
   deleteColumn: (columnId: UUID) => void
-  addThread: (columnId: UUID, newThread: BoardThread) => void
+  addThread: (columnId: UUID, newThread: ThreadFormData) => void
   moveThread: (threadId: UUID, targetColumnId: UUID) => void
-  renameActiveBoard: (newTitle: string) => void
 }
 
 const BoardDetailsContext = createContext<BoardDetailsContextType | undefined>(
@@ -117,26 +138,26 @@ export function BoardDetailsProvider({
     }
   }, [boardId, boardList])
 
+  const addNewColumn = (title: string) =>
+    dispatch({ type: "ADD_COLUMN", payload: { title } })
+
   const deleteColumn = (columnId: UUID) =>
     dispatch({ type: "DELETE_COLUMN", payload: { columnId } })
 
-  const addThread = (columnId: UUID, newThread: BoardThread) =>
+  const addThread = (columnId: UUID, newThread: ThreadFormData) =>
     dispatch({ type: "ADD_THREAD", payload: { columnId, newThread } })
 
   const moveThread = (threadId: UUID, targetColumnId: UUID) =>
     dispatch({ type: "MOVE_THREAD", payload: { threadId, targetColumnId } })
 
-  const renameActiveBoard = (newTitle: string) =>
-    dispatch({ type: "RENAME_ACTIVE_BOARD", payload: { newTitle } })
-
   return (
     <BoardDetailsContext.Provider
       value={{
         activeBoard,
+        addNewColumn,
         deleteColumn,
         addThread,
         moveThread,
-        renameActiveBoard,
       }}
     >
       {children}

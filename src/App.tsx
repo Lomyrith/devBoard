@@ -22,7 +22,7 @@ export function App() {
             element: <Profile />,
           },
           {
-            path: "detail/:boardDetailId",
+            path: "detail/:boardId",
             element: (
               <BoardDetailsProvider>
                 <BoardDetail />

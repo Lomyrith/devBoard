@@ -1,22 +1,27 @@
 import { useBoardOverview } from "@/components/contexts/BoardOverviewContext"
-import { type BoardColumn, type UUID } from "@/components/types/boardTypes"
+import {
+  type BoardColumn,
+  type ThreadFormData,
+  type UUID,
+} from "@/components/types/boardTypes"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Edit, Check, X, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Edit, Check, X, Trash2 } from "lucide-react"
+import { ThreadAddAndChangeDialog } from "@/components/dialogs/ThreadAddAndChangeDialog"
 import { useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
+import { useBoardDetails } from "@/components/contexts/BoardDetailsContext"
+import { CreateWithNameDialog } from "@/components/dialogs/CreateWithNameDialog"
 
 export default function BoardDetail() {
   const navigate = useNavigate()
   const [isEditMode, setIsEditMode] = useState(false)
   const [draftTitle, setDraftTitle] = useState<string | null>(null)
 
-  const { boardDetailId } = useParams<{ boardDetailId: string }>()
-  const { boardList, renameBoard } = useBoardOverview()
+  const { activeBoard: board, addNewColumn, addThread } = useBoardDetails()
+  const { renameBoard } = useBoardOverview()
 
-  const board = boardList.find((item) => item.id === boardDetailId) ?? null
-
-  if (boardDetailId === null || boardDetailId === undefined) {
+  if (board === null || board === undefined) {
     return (
       <div>
         <div>Hallo BoardDetail unicht bekannt</div>{" "}
@@ -40,12 +45,13 @@ export default function BoardDetail() {
     setIsEditMode(false)
   }
 
-  function handleDeleteColumn(columnId: UUID) {
-    console.log(columnId)
+  function handleAddThread(columnId: UUID, thread: ThreadFormData) {
+    console.log(columnId, thread)
+    addThread(columnId, thread)
   }
 
-  function handleAddThread(column: BoardColumn) {
-    console.log(column)
+  function handleDeleteColumn(columnId: UUID) {
+    console.log(columnId)
   }
 
   function handleDropThread(threadId: UUID, columnId: UUID) {
@@ -96,6 +102,11 @@ export default function BoardDetail() {
               className="cursor-pointer text-slate-300 hover:text-blue-700"
               onClick={handleEditMode}
             />
+            <CreateWithNameDialog
+              className="ml-auto cursor-pointer bg-blue-950"
+              onCreate={addNewColumn}
+              nameOfCreatabelElement="Liste"
+            />
           </>
         )}
         {isEditMode && (
@@ -136,7 +147,7 @@ export default function BoardDetail() {
 function getColumnCard(
   column: BoardColumn,
   handleDeleteColumn: (columnID: UUID) => void,
-  handleAddThread: (column: BoardColumn) => void,
+  handleAddThread: (columnId: UUID, thread: ThreadFormData) => void,
   onDropThread: (threadId: UUID, columnId: UUID) => void,
   isEditMode: boolean = false
 ) {
@@ -169,17 +180,19 @@ function getColumnCard(
             onClick={() => handleDeleteColumn(column.id)}
           />
         )}
-        <Plus
-          className="cursor-pointer text-slate-300 hover:text-blue-700"
-          onClick={() => handleAddThread(column)}
-        />
+        {
+          <ThreadAddAndChangeDialog
+            onSubmit={handleAddThread}
+            columnId={column.id}
+          />
+        }
       </div>
 
       <div className="flex flex-col gap-4">
         {column.threads?.map((thread) => (
           <div
             key={thread.id}
-            className="flex flex-row justify-between gap-4 rounded-md border-2 border-gray-700 bg-white p-3"
+            className="flex w-80 flex-col justify-between gap-4 rounded-md border-2 border-gray-700 bg-white p-3"
             draggable
             onDragStart={(e) => {
               e.dataTransfer.setData("text/plain", thread.id)
@@ -190,7 +203,30 @@ function getColumnCard(
             onDragStart={(e) => {
               e.dataTransfer.setData("text/plain", thread.id);
             }} */}
-            {thread.title}
+            <div className="flex flex-row items-center justify-between gap-4">
+              {thread.title}
+              <ThreadAddAndChangeDialog
+                onSubmit={handleAddThread}
+                columnId={column.id}
+                thread={thread}
+                triggerIcon={<Edit aria-hidden="true" className="size-5" />}
+              />
+            </div>
+            <div className="flex flex-col gap-0">
+              <div className="flex min-w-0 flex-row items-center justify-between gap-4">
+                <Label className="block min-w-0 truncate text-sm font-light">
+                  {thread.description}
+                </Label>
+              </div>
+              <div className="flex min-w-0 flex-row items-center justify-between gap-4">
+                <Label className="block min-w-0 text-sm font-light">
+                  {thread.deadline.toLocaleDateString()}
+                </Label>
+                <Label className="block min-w-0 text-sm font-light">
+                  {thread.assignedTo?.trim() || "No Assigned"}
+                </Label>
+              </div>
+            </div>
           </div>
         ))}
       </div>
