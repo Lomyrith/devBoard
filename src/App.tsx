@@ -5,6 +5,8 @@ import BoardOverview from "./pages/BoardOverview/BoardOverview"
 import BoardDetail from "./pages/BoardDetail/BoardDetail"
 import { BoardOverviewProvider } from "./components/contexts/BoardOverviewContext"
 import { BoardDetailsProvider } from "./components/contexts/BoardDetailsContext"
+import { ThemeProvider } from "./components/theme-provider"
+import { Tooltip } from "@base-ui/react/tooltip"
 
 export function App() {
   const router = createBrowserRouter(
@@ -36,11 +38,13 @@ export function App() {
   )
 
   return (
-    <>
-      <BoardOverviewProvider>
-        <RouterProvider router={router} />
-      </BoardOverviewProvider>
-    </>
+    <ThemeProvider>
+      <Tooltip.Provider delay={0}>
+        <BoardOverviewProvider>
+          <RouterProvider router={router} />
+        </BoardOverviewProvider>
+      </Tooltip.Provider>
+    </ThemeProvider>
   )
 }
 

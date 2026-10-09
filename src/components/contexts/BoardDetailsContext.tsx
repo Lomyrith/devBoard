@@ -77,27 +77,30 @@ function detailsReducer(
     case "CHANGE_THREAD_DETAILS": {
       const { threadId, changes } = action.payload
       let changedThread: BoardThread | undefined
+      let changedColumnId: UUID | undefined
 
       for (const col of state!.columns ?? []) {
         const found = col.threads?.find((t) => t.id === threadId)
         if (found) {
           changedThread = found
+          changedColumnId = col.id
           break
         }
       }
 
-      if (!changedThread) return state
+      if (!changedThread || !changedColumnId) return state
+      const columnId = changedColumnId
 
       return {
         ...state!,
         columns:
           state!.columns?.map((col) => {
-            if (col.id === changedThread!.columnId) {
+            if (col.id === columnId) {
               return {
                 ...col,
                 threads:
                   col.threads?.map((t) =>
-                    t.id === changedThread!.id ? { ...t, ...changes } : t
+                    t.id === threadId ? { ...t, ...changes, columnId } : t
                   ) ?? null,
               }
             }

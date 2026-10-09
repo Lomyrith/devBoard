@@ -1,5 +1,6 @@
 import {
   useState,
+  useId,
   type ChangeEvent,
   type ReactNode,
   type SyntheticEvent,
@@ -7,8 +8,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog"
@@ -27,6 +26,8 @@ interface CreateDialogProps {
   className?: string
   onSubmit: (threadFormData: ThreadFormData) => void
   triggerIcon?: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function ThreadAddAndChangeDialog({
@@ -34,11 +35,21 @@ export function ThreadAddAndChangeDialog({
   className: className,
   thread: thread,
   triggerIcon = <Plus aria-hidden="true" className="size-5" />,
+  open: controlledOpen,
+  onOpenChange: onControlledOpenChange,
 }: CreateDialogProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const titleInputId = useId()
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isOpen = controlledOpen ?? internalOpen
+  const isEditMode = thread !== undefined && thread.id?.length > 0
   const [isSubmitting, setIsSubmitting] = useState(false) // 👈 Guard State
 
-  const isEditMode = thread !== undefined
+  function handleOpenChange(nextIsOpen: boolean) {
+    if (controlledOpen === undefined) {
+      setInternalOpen(nextIsOpen)
+    }
+    onControlledOpenChange?.(nextIsOpen)
+  }
 
   const originalFormData = thread
     ? omit(thread, "id", "columnId")
@@ -70,18 +81,21 @@ export function ThreadAddAndChangeDialog({
 
     onSubmit(formData)
 
-    setIsOpen(false)
+    handleOpenChange(false)
     setIsSubmitting(false)
-    setFormData({
-      title: "",
-      description: "",
-      assignedTo: "",
-      deadline: new Date(),
-    })
+
+    if (!isEditMode) {
+      setFormData({
+        title: "",
+        description: "",
+        assignedTo: "",
+        deadline: new Date(),
+      })
+    }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* Der Button, der das Overlay öffnet */}
       <DialogTrigger
         render={
@@ -90,36 +104,40 @@ export function ThreadAddAndChangeDialog({
             size="icon-lg"
             className={
               className ??
-              "m-0 cursor-pointer bg-transparent p-0 text-slate-500 hover:bg-transparent hover:text-green-700"
+              "m-0 cursor-pointer bg-transparent p-0 text-muted-foreground hover:bg-transparent hover:text-success"
             }
             aria-label="Thread erstellen"
           >
             {triggerIcon}
           </Button>
-          // <Plus className={className} />
-          // <Button className={className}>
-          //   {isEditMode ? "Bearbeiten" : "Erstelle"} Thread
-          // </Button>
         }
       />
 
       <DialogContent className="flex h-screen w-screen max-w-none flex-col justify-between rounded-none border-none p-6">
         {" "}
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <DialogHeader>
+          {/* <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Bearbeiten" : "Erstellen"} Thread
             </DialogTitle>
-          </DialogHeader>
+          </DialogHeader> */}
 
           <div className="flex min-h-0 flex-1 flex-col py-4">
-            <Label className="text-sm">Titel</Label>
+            <Label htmlFor={titleInputId} className="text-sm">
+              Titel
+              <span aria-hidden="true" className="text-destructive">
+                *
+              </span>
+              <span className="sr-only">Pflichtfeld</span>
+            </Label>
             <Input
+              id={titleInputId}
               placeholder="Thread-Name eingeben..."
               name="title"
               value={formData.title}
               onChange={handleChange}
-              autoFocus
+              required
+              {...(!isEditMode ? { autoFocus: true } : {})}
             />
             <Label className="text-sm">Beschreibung</Label>
             <Textarea
@@ -128,10 +146,11 @@ export function ThreadAddAndChangeDialog({
               value={formData.description}
               onChange={handleChange}
               placeholder="Beschreibung eingeben..."
-              /* 
-                   - h-full & resize-none strecken das Feld über die volle Höhe
-                   - min-h-0 verhindert ein Überlaufen des Flex-Containers
-                */
+              {...(isEditMode
+                ? {
+                    autoFocus: true,
+                  }
+                : {})}
               className="h-full min-h-0 flex-1 resize-none"
             />
             <Label className="text-sm">Zugewiesene Person</Label>
@@ -161,7 +180,7 @@ export function ThreadAddAndChangeDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsOpen(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Abbrechen
             </Button>
@@ -169,7 +188,13 @@ export function ThreadAddAndChangeDialog({
               type="submit"
               disabled={isSubmitting || !formData.title.trim()}
             >
-              {isSubmitting ? "Wird erstellt..." : "Erstellen"}
+              {isSubmitting
+                ? isEditMode
+                  ? "Wird gespeichert..."
+                  : "Wird erstellt..."
+                : isEditMode
+                  ? "Speichern"
+                  : "Erstellen"}
             </Button>
           </DialogFooter>
         </form>

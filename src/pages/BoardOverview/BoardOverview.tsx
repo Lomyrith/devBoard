@@ -28,7 +28,7 @@ export default function BoardOverview() {
           />
           {/* <Button
             onClick={handleAddBoard}
-            className="cursor-pointer bg-blue-950"
+            className="cursor-pointer bg-action text-action-foreground hover:bg-action-hover"
           >
             Neues Board
           </Button> */}
@@ -52,7 +52,7 @@ function getBoardCard(
   return (
     <div
       key={board.id}
-      className="border-black-1 flex max-w-80 cursor-pointer flex-row justify-between gap-3 rounded-r-2xl border border-black p-5 hover:bg-blue-50"
+      className="hover:bg-card-hover flex max-w-80 cursor-pointer flex-row justify-between gap-3 rounded-r-2xl border border-border bg-card p-5"
       onClick={() => handleClickOnBoard(board)}
     >
       <div className="flex flex-col gap-4">
@@ -70,7 +70,7 @@ function getBoardCard(
       </div>
       <div>
         <Trash2
-          className="cursor-pointer text-slate-300 hover:text-red-700"
+          className="cursor-pointer text-action-muted hover:text-destructive"
           onClick={() => handleDeleteBoard(board.id)}
         />
       </div>
