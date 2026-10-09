@@ -16,6 +16,10 @@ type DetailsAction =
       type: "ADD_THREAD"
       payload: { columnId: UUID; newThread: ThreadFormData }
     }
+  | {
+      type: "CHANGE_THREAD_DETAILS"
+      payload: { threadId: UUID; changes: ThreadFormData }
+    }
   | { type: "MOVE_THREAD"; payload: { threadId: UUID; targetColumnId: UUID } }
 
 function detailsReducer(
@@ -70,6 +74,38 @@ function detailsReducer(
       }
     }
 
+    case "CHANGE_THREAD_DETAILS": {
+      const { threadId, changes } = action.payload
+      let changedThread: BoardThread | undefined
+
+      for (const col of state!.columns ?? []) {
+        const found = col.threads?.find((t) => t.id === threadId)
+        if (found) {
+          changedThread = found
+          break
+        }
+      }
+
+      if (!changedThread) return state
+
+      return {
+        ...state!,
+        columns:
+          state!.columns?.map((col) => {
+            if (col.id === changedThread!.columnId) {
+              return {
+                ...col,
+                threads:
+                  col.threads?.map((t) =>
+                    t.id === changedThread!.id ? { ...t, ...changes } : t
+                  ) ?? null,
+              }
+            }
+            return col
+          }) ?? null,
+      }
+    }
+
     case "MOVE_THREAD": {
       const { threadId, targetColumnId } = action.payload
       let movedThread: BoardThread | undefined
@@ -83,6 +119,10 @@ function detailsReducer(
       }
 
       if (!movedThread) return state
+      if (!state!.columns?.some((col) => col.id === targetColumnId))
+        return state
+
+      const threadToMove = { ...movedThread, columnId: targetColumnId }
 
       const updatedColumns =
         state!.columns?.map((col) => {
@@ -92,7 +132,7 @@ function detailsReducer(
           if (col.id === targetColumnId) {
             return {
               ...col,
-              threads: [...cleanedThreads, movedThread!],
+              threads: [...cleanedThreads, threadToMove],
             }
           }
           return { ...col, threads: cleanedThreads }
@@ -114,6 +154,7 @@ interface BoardDetailsContextType {
   addNewColumn: (title: string) => void
   deleteColumn: (columnId: UUID) => void
   addThread: (columnId: UUID, newThread: ThreadFormData) => void
+  changeThreadDetails: (threadId: UUID, changes: ThreadFormData) => void
   moveThread: (threadId: UUID, targetColumnId: UUID) => void
 }
 
@@ -147,6 +188,12 @@ export function BoardDetailsProvider({
   const addThread = (columnId: UUID, newThread: ThreadFormData) =>
     dispatch({ type: "ADD_THREAD", payload: { columnId, newThread } })
 
+  const changeThreadDetails = (threadId: UUID, changes: ThreadFormData) =>
+    dispatch({
+      type: "CHANGE_THREAD_DETAILS",
+      payload: { threadId, changes },
+    })
+
   const moveThread = (threadId: UUID, targetColumnId: UUID) =>
     dispatch({ type: "MOVE_THREAD", payload: { threadId, targetColumnId } })
 
@@ -157,6 +204,7 @@ export function BoardDetailsProvider({
         addNewColumn,
         deleteColumn,
         addThread,
+        changeThreadDetails,
         moveThread,
       }}
     >

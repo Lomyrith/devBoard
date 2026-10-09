@@ -18,21 +18,18 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   type BoardThread,
   type ThreadFormData,
-  type UUID,
 } from "@/components/types/boardTypes"
 import { Plus } from "lucide-react"
 import { Label } from "../ui/label"
 
 interface CreateDialogProps {
-  columnId: UUID
   thread?: BoardThread
   className?: string
-  onSubmit: (columnId: UUID, threadFormData: ThreadFormData) => void
+  onSubmit: (threadFormData: ThreadFormData) => void
   triggerIcon?: ReactNode
 }
 
 export function ThreadAddAndChangeDialog({
-  columnId,
   onSubmit: onSubmit,
   className: className,
   thread: thread,
@@ -71,7 +68,7 @@ export function ThreadAddAndChangeDialog({
 
     setIsSubmitting(true)
 
-    onSubmit(columnId, formData)
+    onSubmit(formData)
 
     setIsOpen(false)
     setIsSubmitting(false)
